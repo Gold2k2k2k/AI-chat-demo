@@ -1,5 +1,9 @@
 # DeepSeek AI 聊天助手 (前端演示版)
 
+## 项目地址与在线体验
+👉 **代码仓库**: [https://github.com/Gold2k2k2k/AI-chat-demo](https://github.com/Gold2k2k2k/AI-chat-demo)
+👉 **在线演示**: [GitHub Pages 部署链接](https://github.com/Gold2k2k2k/AI-chat-demo/deployments/github-pages)
+
 ## 1. 项目简介与产品定位
 **项目简介**：
 本项目是一个基于纯前端原生技术（HTML/CSS/JS）构建的智能 AI 聊天对话交互界面。
@@ -42,5 +46,5 @@
     *   媒体查询 (`@media`) 实现移动端自适应折叠侧边栏
 *   **交互逻辑**：**Vanilla JavaScript** (原生 JS)
     *   DOM 动态元素创建与销毁、事件监听与拦截
-    *   纯原生正则表达式 (RegEx) 驱动的简易 Markdown 解析引擎 (支持 ``代码、加粗、列表、段落渲染)
+    *   纯原生正则表达式 (RegEx) 驱动的简易 Markdown 解析引擎 (支持 \`\`\`代码、加粗、列表、段落渲染)
     *   `setTimeout` 异步模拟与防抖机制
