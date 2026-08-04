@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DeepSeek AI 聊天</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --primary: #7c3aed;
+      --primary-light: #a78bfa;
+      --primary-dark: #5b21b6;
+      --bg-main: #f5f3ff;
+      --bg-card: #ffffff;
+      --text-primary: #1e1b2e;
+      --text-secondary: #6b6880;
+      --text-muted: #a8a4bc;
+      --border: #e9e7f3;
+      --accent-pink: #ec4899;
+      --accent-blue: #3b82f6;
+      --accent-orange: #f97316;
+      --accent-green: #22c55e;
+      --accent-cyan: #06b6d4;
+      --accent-yellow: #eab308;
+      --shadow-sm: 0 1px 3px rgba(124,58,237,0.06);
+      --shadow-md: 0 6px 20px rgba(124,58,237,0.10);
+      --shadow-lg: 0 12px 40px rgba(124,58,237,0.15);
+      --radius: 16px;
+      --radius-sm: 10px;
+      --sidebar-w: 290px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: var(--bg-main);
+      color: var(--text-primary);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+    }
+
+    /* Animated gradient background for the whole page */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 15% 15%, rgba(124,58,237,0.08), transparent 50%),
+        radial-gradient(ellipse at 85% 80%, rgba(236,72,153,0.06), transparent 50%),
+        radial-gradient(ellipse at 50% 50%, rgba(59,130,246,0.04), transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ============ SIDEBAR ============ */
+    .sidebar {
+      width: var(--sidebar-w);
+      min-width: var(--sidebar-w);
+      background: linear-gradient(165deg, #6d28d9 0%, #7c3aed 30%, #5b21b6 70%, #4c1d95 100%);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      padding: 28px 22px;
+      position: relative;
+      overflow: hidden;
+      z-index: 1;
+    }
+
+    /* Glowing orbs in sidebar */
+    .sidebar::before {
+      content: '';
+      position: absolute;
+      top: -60px;
+      right: -40px;
+      width: 220px;
+      height: 220px;
+      background: radial-gradient(circle, rgba(167,139,250,0.25), transparent 70%);
+      border-radius: 50%;
+      animation: floatOrb 8s ease-in-out infinite;
+    }
+
+    .sidebar::after {
+      content: '';
+      position: absolute;
+      bottom: -50px;
+      left: -30px;
+      width: 180px;
+      height: 180px;
+      background: radial-gradient(circle, rgba(236,72,153,0.15), transparent 70%);
+      border-radius: 50%;
+      animation: floatOrb 10s ease-in-out infinite reverse;
+    }
+
+    @keyframes floatOrb {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(15px, 20px) scale(1.1); }
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 21px;
+      font-weight: 700;
+      margin-bottom: 32px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .logo-icon {
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.25), rgba(255,255,255,0.1));
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .logo span {
+      background: linear-gradient(135deg, #fff, #e9d5ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .sidebar-section {
+      margin-bottom: 28px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .sidebar-section h3 {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: rgba(255,255,255,0.45);
+      margin-bottom: 14px;
+      font-weight: 700;
+    }
+
+    .model-card {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      padding: 14px;
+      backdrop-filter: blur(10px);
+    }
+
+    .info-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      margin-bottom: 10px;
+      color: rgba(255,255,255,0.82);
+    }
+
+    .info-item:last-child { margin-bottom: 0; }
+
+    .info-item .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .dot-green { background: var(--accent-green); box-shadow: 0 0 10px rgba(34,197,94,0.6); animation: pulse 2s infinite; }
+    .dot-orange { background: var(--accent-orange); box-shadow: 0 0 8px rgba(249,115,22,0.5); }
+    .dot-cyan { background: var(--accent-cyan); box-shadow: 0 0 8px rgba(6,182,212,0.5); }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .info-item code {
+      font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
+      font-size: 11.5px;
+      color: #ddd6fe;
+      background: rgba(255,255,255,0.1);
+      padding: 2px 7px;
+      border-radius: 5px;
+    }
+
+    .instructions {
+      list-style: none;
+      counter-reset: step;
+    }
+
+    .instructions li {
+      counter-increment: step;
+      font-size: 13px;
+      color: rgba(255,255,255,0.72);
+      margin-bottom: 12px;
+      padding-left: 32px;
+      position: relative;
+      line-height: 1.5;
+    }
+
+    .instructions li::before {
+      content: counter(step);
+      position: absolute;
+      left: 0;
+      top: -1px;
+      width: 22px;
+      height: 22px;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: #ddd6fe;
+    }
+
+    .demo-badge {
+      margin-top: auto;
+      padding: 12px 16px;
+      background: linear-gradient(135deg, rgba(234,179,8,0.15), rgba(249,115,22,0.15));
+      border: 1px solid rgba(234,179,8,0.3);
+      border-radius: 10px;
+      font-size: 13px;
+      text-align: center;
+      color: #fde047;
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .demo-badge .dot-demo {
+      width: 7px;
+      height: 7px;
+      background: #fde047;
+      border-radius: 50%;
+      animation: pulse 1.5s infinite;
+    }
+
+    /* ============ MAIN AREA ============ */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Decorative right strip */
+    .main::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: 4px;
+      height: 100%;
+      background: linear-gradient(180deg, #7c3aed 0%, #ec4899 50%, #f97316 100%);
+    }
+
+    /* Header */
+    .header {
+      padding: 22px 36px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,0.7);
+      backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .header-left h1 {
+      font-size: 23px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #7c3aed, #ec4899);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header-left p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: 3px;
+    }
+
+    .header-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      background: rgba(34,197,94,0.1);
+      border: 1px solid rgba(34,197,94,0.2);
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #16a34a;
+    }
+
+    .header-status .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      animation: pulse 2s infinite;
+    }
+
+    /* Chat Area */
+    .chat-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 28px 36px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .chat-area::-webkit-scrollbar { width: 6px; }
+    .chat-area::-webkit-scrollbar-track { background: transparent; }
+    .chat-area::-webkit-scrollbar-thumb {
+      background: rgba(124,58,237,0.15);
+      border-radius: 3px;
+    }
+    .chat-area::-webkit-scrollbar-thumb:hover {
+      background: rgba(124,58,237,0.3);
+    }
+
+    /* Welcome State */
+    .welcome-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      animation: fadeInUp 0.5s ease;
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .welcome-emoji {
+      font-size: 60px;
+      animation: wave 2.5s ease-in-out infinite;
+      filter: drop-shadow(0 4px 12px rgba(124,58,237,0.2));
+    }
+
+    @keyframes wave {
+      0%, 60%, 100% { transform: rotate(0deg); }
+      10% { transform: rotate(14deg); }
+      20% { transform: rotate(-8deg); }
+      30% { transform: rotate(14deg); }
+      40% { transform: rotate(-4deg); }
+      50% { transform: rotate(10deg); }
+    }
+
+    .welcome-state h2 {
+      font-size: 28px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #7c3aed, #ec4899);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .welcome-state > p {
+      font-size: 15px;
+      color: var(--text-secondary);
+    }
+
+    /* Quick Cards */
+    .quick-cards {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      max-width: 620px;
+      width: 100%;
+      margin-top: 16px;
+    }
+
+    .quick-card {
+      background: var(--bg-card);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .quick-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .quick-card[data-color="blue"]::before { background: linear-gradient(90deg, #3b82f6, #06b6d4); }
+    .quick-card[data-color="purple"]::before { background: linear-gradient(90deg, #7c3aed, #ec4899); }
+    .quick-card[data-color="green"]::before { background: linear-gradient(90deg, #22c55e, #06b6d4); }
+    .quick-card[data-color="orange"]::before { background: linear-gradient(90deg, #f97316, #eab308); }
+
+    .quick-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-md);
+      border-color: transparent;
+    }
+
+    .quick-card:hover::before {
+      opacity: 1;
+    }
+
+    .quick-card:active {
+      transform: translateY(-2px);
+    }
+
+    .card-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      flex-shrink: 0;
+      transition: transform 0.3s;
+    }
+
+    .quick-card:hover .card-icon {
+      transform: scale(1.1) rotate(-5deg);
+    }
+
+    .card-icon.blue { background: linear-gradient(135deg, #dbeafe, #e0f2fe); }
+    .card-icon.purple { background: linear-gradient(135deg, #f3e8ff, #fce7f3); }
+    .card-icon.green { background: linear-gradient(135deg, #dcfce7, #ecfccb); }
+    .card-icon.orange { background: linear-gradient(135deg, #ffedd5, #fef9c3); }
+
+    .card-body h4 {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+
+    .card-body p {
+      font-size: 12.5px;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+
+    /* Chat Messages */
+    .message {
+      display: flex;
+      gap: 12px;
+      max-width: 78%;
+      animation: msgIn 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @keyframes msgIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .message.user {
+      align-self: flex-end;
+      flex-direction: row-reverse;
+    }
+
+    .msg-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .message.user .msg-avatar {
+      background: linear-gradient(135deg, #7c3aed, #6d28d9);
+      box-shadow: 0 4px 12px rgba(124,58,237,0.25);
+    }
+
+    .message.assistant .msg-avatar {
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      box-shadow: 0 4px 12px rgba(59,130,246,0.25);
+    }
+
+    .msg-bubble {
+      padding: 14px 18px;
+      border-radius: 18px;
+      font-size: 14px;
+      line-height: 1.75;
+      word-break: break-word;
+    }
+
+    .message.user .msg-bubble {
+      background: linear-gradient(135deg, #7c3aed, #6d28d9);
+      color: #fff;
+      border-bottom-right-radius: 5px;
+      box-shadow: 0 4px 12px rgba(124,58,237,0.2);
+    }
+
+    .message.assistant .msg-bubble {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-bottom-left-radius: 5px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .msg-bubble pre {
+      background: #1e1b2e;
+      color: #e2e8f0;
+      padding: 14px;
+      border-radius: 10px;
+      overflow-x: auto;
+      margin: 8px 0;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .msg-bubble code {
+      font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
+    }
+
+    .msg-bubble p { margin-bottom: 8px; }
+    .msg-bubble p:last-child { margin-bottom: 0; }
+    .msg-bubble ul, .msg-bubble ol { margin: 8px 0 8px 20px; }
+    .msg-bubble strong { font-weight: 700; }
+
+    /* Typing Indicator */
+    .typing-indicator {
+      display: flex;
+      gap: 5px;
+      padding: 4px 0;
+    }
+
+    .typing-indicator span {
+      width: 9px;
+      height: 9px;
+      background: var(--primary-light);
+      border-radius: 50%;
+      animation: typing 1.4s infinite;
+    }
+
+    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes typing {
+      0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+      30% { opacity: 1; transform: translateY(-6px); }
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: linear-gradient(135deg, #1e1b2e, #2d2a4a);
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: var(--shadow-lg);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 999;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .toast .toast-icon {
+      width: 20px;
+      height: 20px;
+      background: linear-gradient(135deg, #7c3aed, #ec4899);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+
+    /* Input Area */
+    .input-area {
+      padding: 18px 36px 22px;
+      background: rgba(255,255,255,0.7);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid var(--border);
+    }
+
+    .input-wrapper {
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .input-wrapper textarea {
+      flex: 1;
+      padding: 13px 18px;
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      font-size: 14px;
+      font-family: inherit;
+      resize: none;
+      outline: none;
+      transition: all 0.2s;
+      max-height: 120px;
+      line-height: 1.5;
+      background: var(--bg-card);
+    }
+
+    .input-wrapper textarea:focus {
+      border-color: var(--primary-light);
+      box-shadow: 0 0 0 4px rgba(124,58,237,0.1);
+    }
+
+    .btn-clear {
+      width: 44px;
+      height: 44px;
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      background: var(--bg-card);
+      cursor: pointer;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      color: var(--text-secondary);
+      flex-shrink: 0;
+    }
+
+    .btn-clear:hover {
+      border-color: #ef4444;
+      color: #ef4444;
+      background: #fef2f2;
+    }
+
+    .btn-send {
+      padding: 0 22px;
+      height: 44px;
+      border: none;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #7c3aed, #6d28d9);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(124,58,237,0.3);
+    }
+
+    .btn-send:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(124,58,237,0.4);
+    }
+
+    .btn-send:active { transform: translateY(0); }
+
+    .btn-send:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-send .arrow {
+      transition: transform 0.2s;
+    }
+
+    .btn-send:hover .arrow {
+      transform: translateX(3px);
+    }
+
+    .input-hint {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 10px;
+      text-align: center;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      body { flex-direction: column; }
+      .sidebar { width: 100%; min-width: auto; padding: 16px; }
+      .sidebar-section:nth-child(n+4) { display: none; }
+      .quick-cards { grid-template-columns: 1fr; }
+      .header { padding: 16px; }
+      .chat-area { padding: 16px; }
+      .input-area { padding: 12px 16px 16px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">⚡</div>
+      <span>AI 助手</span>
+    </div>
+
+    <div class="sidebar-section">
+      <h3>模型信息</h3>
+      <div class="model-card">
+        <div class="info-item">
+          <span class="dot dot-green"></span>
+          模型: <code>deepseek-y4-flash-0731</code>
+        </div>
+        <div class="info-item">
+          <span class="dot dot-orange"></span>
+          提供商: DeepSeek
+        </div>
+        <div class="info-item">
+          <span class="dot dot-cyan"></span>
+          网关: tokendance.space
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <h3>使用说明</h3>
+      <ol class="instructions">
+        <li>点击右侧卡片快速提问</li>
+        <li>或在下方输入框输入问题</li>
+        <li>按 Enter 键发送消息</li>
+        <li>点击 🗑 清空对话记录</li>
+      </ol>
+    </div>
+
+    <div class="demo-badge">
+      <span class="dot-demo"></span>
+      纯前端演示模式
+    </div>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <main class="main">
+    <header class="header">
+      <div class="header-left">
+        <h1>DeepSeek AI 聊天</h1>
+        <p>基于 DeepSeek 大语言模型的智能对话</p>
+      </div>
+      <div class="header-status">
+        <span class="dot"></span>
+        在线
+      </div>
+    </header>
+
+    <div class="chat-area" id="chatArea">
+      <!-- Welcome state -->
+      <div class="welcome-state" id="welcomeState">
+        <div class="welcome-emoji">👋</div>
+        <h2>你好！</h2>
+        <p>我是 AI 助手，你想聊点什么？</p>
+
+        <div class="quick-cards">
+          <div class="quick-card" data-color="blue" onclick="useQuickCard('写代码')">
+            <div class="card-icon blue">💻</div>
+            <div class="card-body">
+              <h4>写代码</h4>
+              <p>Python、JavaScript、Java 等</p>
+            </div>
+          </div>
+          <div class="quick-card" data-color="purple" onclick="useQuickCard('解释概念')">
+            <div class="card-icon purple">🧠</div>
+            <div class="card-body">
+              <h4>解释概念</h4>
+              <p>AI、机器学习、深度学习</p>
+            </div>
+          </div>
+          <div class="quick-card" data-color="green" onclick="useQuickCard('翻译')">
+            <div class="card-icon green">🌍</div>
+            <div class="card-body">
+              <h4>翻译</h4>
+              <p>中英文互译，精准翻译</p>
+            </div>
+          </div>
+          <div class="quick-card" data-color="orange" onclick="useQuickCard('创作')">
+            <div class="card-icon orange">✍️</div>
+            <div class="card-body">
+              <h4>创作</h4>
+              <p>写诗、写文章、写故事</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="input-area">
+      <div class="input-wrapper">
+        <button class="btn-clear" onclick="clearChat()" title="清空对话">🗑</button>
+        <textarea
+          id="chatInput"
+          placeholder="输入你的问题..."
+          rows="1"
+          oninput="autoResize(this)"
+          onkeydown="handleKeyDown(event)"
+        ></textarea>
+        <button class="btn-send" onclick="sendMessage()" id="sendBtn">
+          发送<span class="arrow">→</span>
+        </button>
+      </div>
+      <div class="input-hint">按 Enter 发送 · Shift+Enter 换行</div>
+    </div>
+  </main>
+
+  <!-- Toast -->
+  <div class="toast" id="toast">
+    <div class="toast-icon">✓</div>
+    <span id="toastText">已填入预设问题</span>
+  </div>
+
+  <script>
+    // ============ QUICK CARDS ============ //
+    const quickPresets = {
+      '写代码': '请用 Python 写一个快速排序算法，并加上详细注释。',
+      '解释概念': '请简单解释一下什么是机器学习，以及它和深度学习的区别。',
+      '翻译': '请将以下中文翻译成英文：\n\n人工智能正在改变我们的生活方式，从智能手机到自动驾驶汽车，AI 技术已经无处不在。',
+      '创作': '请写一首关于秋天落叶的现代诗，意境优美，4-8 行即可。'
+    };
+
+    // Demo responses for preset categories
+    const demoReplies = {
+      '写代码': '这是一个 Python 快速排序的实现：\n\n```python\ndef quick_sort(arr):\n    """快速排序算法"""\n    if len(arr) <= 1:\n        return arr\n    pivot = arr[len(arr) // 2]  # 选择中间元素作为基准\n    left = [x for x in arr if x < pivot]    # 小于基准的元素\n    middle = [x for x in arr if x == pivot]  # 等于基准的元素\n    right = [x for x in arr if x > pivot]   # 大于基准的元素\n    return quick_sort(left) + middle + quick_sort(right)\n\n# 测试\narr = [3, 6, 8, 10, 1, 2, 1]\nprint(quick_sort(arr))  # 输出: [1, 1, 2, 3, 6, 8, 10]\n```\n\n**算法思路：**\n- 选择一个基准元素（pivot）\n- 将数组分为小于、等于和大于基准的三部分\n- 递归排序左右两部分，合并结果\n\n时间复杂度平均 O(n log n)，最坏 O(n²)。',
+      '解释概念': '**机器学习** 是人工智能的一个子领域，它让计算机通过数据自动学习规律，而无需显式编程。\n\n**深度学习** 是机器学习的一个分支，使用多层神经网络来处理数据。\n\n两者的主要区别：\n- **机器学习**：需要人工提取特征（feature engineering），模型相对简单\n- **深度学习**：能自动提取特征，模型结构更深更复杂，适合处理图像、语音等非结构化数据\n\n简单来说：\n- 人工智能 ⊃ 机器学习 ⊃ 深度学习\n\n深度学习在图像识别、自然语言处理等领域表现优异，但需要大量数据和算力支撑。',
+      '翻译': 'Here is the English translation:\n\nArtificial intelligence is changing the way we live. From smartphones to self-driving cars, AI technology has become ubiquitous.\n\n**翻译要点：**\n- "改变我们的生活方式" → "changing the way we live"\n- "无处不在" → "ubiquitous" (更正式) 或 "everywhere" (更口语)\n\n如需调整语气或风格，请告诉我。',
+      '创作': '《秋叶》\n\n风轻轻一推\n叶子便松开了手\n金黄的弧线划过午后\n\n它不说疼\n只是旋转着降落\n像一封迟到的信\n终于抵达了大地\n\n—— 落叶不是坠落\n是回家。'
+    };
+
+    function useQuickCard(type) {
+      const preset = quickPresets[type];
+      if (!preset) return;
+      const input = document.getElementById('chatInput');
+      input.value = preset;
+      autoResize(input);
+      input.focus();
+      showToast('已填入「' + type + '」预设问题');
+    }
+
+    function showToast(text) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toastText').textContent = text;
+      toast.classList.add('show');
+      clearTimeout(toast._timer);
+      toast._timer = setTimeout(() => toast.classList.remove('show'), 2200);
+    }
+
+    // ============ CHAT LOGIC ============ //
+    let messages = [];
+
+    function autoResize(textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+    }
+
+    function handleKeyDown(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    }
+
+    // Store welcome HTML for restore
+    const welcomeHTML = document.getElementById('welcomeState').outerHTML;
+
+    function clearChat() {
+      messages = [];
+      const chatArea = document.getElementById('chatArea');
+      chatArea.innerHTML = welcomeHTML;
+    }
+
+    function sendMessage() {
+      const input = document.getElementById('chatInput');
+      const text = input.value.trim();
+      if (!text) return;
+
+      // Hide welcome state
+      const welcome = document.getElementById('welcomeState');
+      if (welcome) welcome.remove();
+
+      // Add user message
+      addMessage('user', text);
+      messages.push({ role: 'user', content: text });
+
+      // Clear input
+      input.value = '';
+      autoResize(input);
+
+      // Show typing indicator
+      const typingEl = showTyping();
+      const sendBtn = document.getElementById('sendBtn');
+      sendBtn.disabled = true;
+
+      // Demo mode: find matching preset reply or generic response
+      setTimeout(() => {
+        typingEl.remove();
+
+        let reply = null;
+        // Check if the text matches any preset
+        for (const [key, presetText] of Object.entries(quickPresets)) {
+          if (text === presetText) {
+            reply = demoReplies[key];
+            break;
+          }
+        }
+
+        // Generic demo reply if no preset match
+        if (!reply) {
+          reply = '这是演示模式的回复。\n\n你发送的内容是：\n\n> ' + text + '\n\n在纯前端演示模式下，我无法连接真实的 AI 模型。如需真实对话，请配置 API Key 并接入后端服务。';
+        }
+
+        addMessage('assistant', reply);
+        messages.push({ role: 'assistant', content: reply });
+        sendBtn.disabled = false;
+        input.focus();
+      }, 900 + Math.random() * 600);
+    }
+
+    function addMessage(role, content) {
+      const chatArea = document.getElementById('chatArea');
+      const msg = document.createElement('div');
+      msg.className = 'message ' + role;
+
+      const avatar = document.createElement('div');
+      avatar.className = 'msg-avatar';
+      avatar.textContent = role === 'user' ? '🧑' : '🤖';
+
+      const bubble = document.createElement('div');
+      bubble.className = 'msg-bubble';
+      bubble.innerHTML = renderMarkdown(content);
+
+      msg.appendChild(avatar);
+      msg.appendChild(bubble);
+      chatArea.appendChild(msg);
+      chatArea.scrollTop = chatArea.scrollHeight;
+    }
+
+    function showTyping() {
+      const chatArea = document.getElementById('chatArea');
+      const msg = document.createElement('div');
+      msg.className = 'message assistant';
+
+      const avatar = document.createElement('div');
+      avatar.className = 'msg-avatar';
+      avatar.textContent = '🤖';
+
+      const bubble = document.createElement('div');
+      bubble.className = 'msg-bubble';
+      bubble.innerHTML = '<div class="typing-indicator"><span></span><span></span><span></span></div>';
+
+      msg.appendChild(avatar);
+      msg.appendChild(bubble);
+      chatArea.appendChild(msg);
+      chatArea.scrollTop = chatArea.scrollHeight;
+      return msg;
+    }
+
+    // ============ MARKDOWN RENDERER ============ //
+    function renderMarkdown(text) {
+      let html = text;
+
+      // Escape HTML
+      html = html.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+      // Code blocks ```
+      html = html.replace(/```(\w*)\n?([\s\S]*?)```/g, function(m, lang, code) {
+        return '<pre><code>' + code.trim() + '</code></pre>';
+      });
+
+      // Inline code
+      html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+      // Bold
+      html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+
+      // Blockquote
+      html = html.replace(/^&gt; (.+)$/gm, '<blockquote style="border-left:3px solid #a78bfa;padding-left:12px;margin:8px 0;color:#64748b;font-style:italic;">$1</blockquote>');
+
+      // Headings
+      html = html.replace(/^### (.+)$/gm, '<strong style="font-size:15px;">$1</strong>');
+      html = html.replace(/^## (.+)$/gm, '<strong style="font-size:15px;">$1</strong>');
+      html = html.replace(/^# (.+)$/gm, '<strong style="font-size:15px;">$1</strong>');
+
+      // Lists
+      html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
+      html = html.replace(/(<li>.*<\/li>\n?)+/g, function(m) {
+        return '<ul>' + m + '</ul>';
+      });
+
+      // Paragraphs
+      html = html.split(/\n\n+/).map(function(block) {
+        block = block.trim();
+        if (!block) return '';
+        if (block.startsWith('<pre>') || block.startsWith('<ul>') || block.startsWith('<strong') || block.startsWith('<blockquote')) {
+          return block;
+        }
+        block = block.replace(/\n/g, '<br>');
+        return '<p>' + block + '</p>';
+      }).join('\n');
+
+      return html;
+    }
+
+    // Focus input on load
+    document.getElementById('chatInput').focus();
+  </script>
+</body>
+</html>
