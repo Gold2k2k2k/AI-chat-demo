@@ -2,7 +2,7 @@
 
 ## 项目地址与在线体验
 👉 **代码仓库**: [https://github.com/Gold2k2k2k/AI-chat-demo](https://github.com/Gold2k2k2k/AI-chat-demo)
-👉 **在线演示**: [GitHub Pages 部署链接](https://github.com/Gold2k2k2k/AI-chat-demo/deployments/github-pages)
+👉 **在线演示**: [https://gold2k2k2k.github.io/AI-chat-demo/](https://gold2k2k2k.github.io/AI-chat-demo/)
 
 ## 1. 项目简介与产品定位
 **项目简介**：
